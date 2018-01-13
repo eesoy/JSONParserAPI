@@ -14,6 +14,20 @@ struct MovieInfo {
     var thumbnailUrl: String
 }
 
+//UIImageView 클래스에 함수를 만듦
+extension UIImageView {
+    func downloadFromUrlString(url: String) {
+        guard let url = URL(string: url) else {return}
+        
+        URLSession.shared.dataTask(with: url) { (data, response, error) in
+            guard let data = data, error == nil else {return}
+            DispatchQueue.main.async {
+                self.image = UIImage(data: data)
+            }
+        }.resume()
+    }
+}
+
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     @IBOutlet weak var tableView_movie: UITableView!
@@ -79,15 +93,15 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "movieCell", for: indexPath) as! MovieTableViewCell
-        if let url = URL(string: movieInfoArray[indexPath.row].thumbnailUrl){
-            URLSession.shared.dataTask(with: url, completionHandler: { (data, response, error) in
-                guard let data = data else { return }
-                DispatchQueue.main.async {
-                     cell.img_thumbnail.image = UIImage(data: data)
-                }
-            }).resume()
-        }
-    
+//        if let url = URL(string: movieInfoArray[indexPath.row].thumbnailUrl){
+//            URLSession.shared.dataTask(with: url, completionHandler: { (data, response, error) in
+//                guard let data = data else { return }
+//                DispatchQueue.main.async {
+//                     cell.img_thumbnail.image = UIImage(data: data)
+//                }
+//            }).resume()
+//        }
+        cell.img_thumbnail.downloadFromUrlString(url: movieInfoArray[indexPath.row].thumbnailUrl)
         cell.lbl_title.text = movieInfoArray[indexPath.row].title
         
         return cell
