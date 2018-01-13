@@ -39,12 +39,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         tableView_movie.dataSource = self
         tableView_movie.delegate = self
         requestMovieInfo(page: currentPage)
-        currentPage += 1
+        
     }
     
     func requestMovieInfo(page: Int){
-        
-        if let reqUrl = URL(string: "http://115.68.183.178:2029/hoppin/movies?order=releasedateasc&count=10&page=1&version=1&genreId="){
+        currentPage += 1
+        if let reqUrl = URL(string: "http://115.68.183.178:2029/hoppin/movies?order=releasedateasc&count=10&page=\(page)&version=1&genreId="){
             let task = URLSession.shared.dataTask(with: reqUrl, completionHandler: { (data, response, error) in
                 // 성공일 경우 data, response 값 존재하고 error 값은 nil
                 // 실패일 경우 error 값은 nil 아닌 값
@@ -124,7 +124,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         return 150
     }
     
-
     
     
 
