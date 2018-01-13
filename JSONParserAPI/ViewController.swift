@@ -32,11 +32,17 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     @IBOutlet weak var tableView_movie: UITableView!
     var movieInfoArray = [MovieInfo]()
+    var currentPage = 1
     override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView_movie.dataSource = self
         tableView_movie.delegate = self
+        requestMovieInfo(page: currentPage)
+        currentPage += 1
+    }
+    
+    func requestMovieInfo(page: Int){
         
         if let reqUrl = URL(string: "http://115.68.183.178:2029/hoppin/movies?order=releasedateasc&count=10&page=1&version=1&genreId="){
             let task = URLSession.shared.dataTask(with: reqUrl, completionHandler: { (data, response, error) in
@@ -58,32 +64,31 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                         let hoppin = jsonDic["hoppin"] as? [String: Any],
                         let movies = hoppin["movies"] as? [String: Any],
                         let movieArray = movies["movie"] as? [[String: Any]]
-                        {
-                            for movie in movieArray {
-                                if let title = movie["title"] as? String,
-                                    let thumbnail = movie["thumbnailImage"] as? String
-                                {
-                                    let movieInfo = MovieInfo(title: title, thumbnailUrl: thumbnail)
-                                    self.movieInfoArray.append(movieInfo)
-                                }
+                    {
+                        for movie in movieArray {
+                            if let title = movie["title"] as? String,
+                                let thumbnail = movie["thumbnailImage"] as? String
+                            {
+                                let movieInfo = MovieInfo(title: title, thumbnailUrl: thumbnail)
+                                self.movieInfoArray.append(movieInfo)
                             }
-                            
-                            print(self.movieInfoArray)
-                            DispatchQueue.main.async { // correct UI 관련 작업은 반드시 메인 스레드에서
-                                self.tableView_movie.reloadData()
-                            }
-                            
                         }
-                    
+                        
+                        print(self.movieInfoArray)
+                        DispatchQueue.main.async { // correct UI 관련 작업은 반드시 메인 스레드에서
+                            self.tableView_movie.reloadData()
+                        }
                         
                     }
+                    
+                    
+                }
                 catch let error {
                     print("parsing error: \(error.localizedDescription)")
                 }
             })
             task.resume()
         }
-        
     }
     
     //MARK: -UITableViewDataSource
@@ -104,6 +109,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         cell.img_thumbnail.downloadFromUrlString(url: movieInfoArray[indexPath.row].thumbnailUrl)
         cell.lbl_title.text = movieInfoArray[indexPath.row].title
         
+        
+        //스크롤이 바닥에 닿았을 때
+        if indexPath.row == movieInfoArray.count - 1 {
+            requestMovieInfo(page: currentPage)
+        }
+        
         return cell
     }
     
@@ -112,6 +123,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 150
     }
+    
 
     
     
