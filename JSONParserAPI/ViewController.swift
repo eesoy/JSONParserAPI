@@ -14,11 +14,15 @@ struct MovieInfo {
     var thumbnailUrl: String
 }
 
-class ViewController: UIViewController {
-
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+    
+    @IBOutlet weak var tableView_movie: UITableView!
     var movieInfoArray = [MovieInfo]()
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView_movie.dataSource = self
+        tableView_movie.delegate = self
         
         if let reqUrl = URL(string: "http://115.68.183.178:2029/hoppin/movies?order=releasedateasc&count=10&page=1&version=1&genreId="){
             let task = URLSession.shared.dataTask(with: reqUrl, completionHandler: { (data, response, error) in
@@ -51,6 +55,10 @@ class ViewController: UIViewController {
                             }
                             
                             print(self.movieInfoArray)
+                            DispatchQueue.main.async { // correct UI 관련 작업은 반드시 메인 스레드에서
+                                self.tableView_movie.reloadData()
+                            }
+                            
                         }
                     
                         
@@ -64,6 +72,33 @@ class ViewController: UIViewController {
         
     }
     
+    //MARK: -UITableViewDataSource
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return movieInfoArray.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "movieCell", for: indexPath) as! MovieTableViewCell
+        if let url = URL(string: movieInfoArray[indexPath.row].thumbnailUrl){
+            URLSession.shared.dataTask(with: url, completionHandler: { (data, response, error) in
+                guard let data = data else { return }
+                DispatchQueue.main.async {
+                     cell.img_thumbnail.image = UIImage(data: data)
+                }
+            }).resume()
+        }
+    
+        cell.lbl_title.text = movieInfoArray[indexPath.row].title
+        
+        return cell
+    }
+    
+    
+    //MARK: -UITableViewDelegate
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 150
+    }
+
     
     
 
